@@ -1,1 +1,1 @@
-# EGE-Fundamentals-of-Robotics
+# EGE Robotics Modeling and Control
