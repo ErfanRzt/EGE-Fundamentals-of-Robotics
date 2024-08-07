@@ -54,7 +54,7 @@ classdef SerialLinkManipulator
             end
         end
 
-        function anim = drawConfiguration(obj, configuration)
+        function drawConfiguration(obj, configuration)
             figure;
             for i = configuration
                 joints = obj.taskSpace(i, false);
