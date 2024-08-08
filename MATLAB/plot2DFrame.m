@@ -1,13 +1,10 @@
-function varargout = plot2DFrame(varargin)
+function varargout = plot2DFrame(rotationMatrix, translationVector, varargin)
 % PLOT2DFRAME Plot a 2-D Cartesian coordinate system.
 %
-%   plot2DFrame() 
-%   plot2DFrame(rotationMatrix, translationVector) 
+%   plot2DFrame(rotationMatrix, translationVector)
 %   plot2DFrame(rotationMatrix, translationVector, 'Scale', 2, 'LineWidth', 3)
 %
 %   Name-Value Pair Arguments:
-%   - 'Rotation': 2x2 orthogonal matrix defining orientation (default: eye(2))
-%   - 'Translation': 1x2 vector defining position (default: [0, 0])
 %   - 'Scale': Scalar or 1x2 vector defining basis vector lengths (default: 1)
 %   - 'LineWidth': Line width for the quiver plot (default: 2)
 %   - 'Color': Cell array of colors for each axis (default: {'r', 'g'})
@@ -16,27 +13,13 @@ function varargout = plot2DFrame(varargin)
 %   - If requested, returns the handle of the current axes (gca).
 
     % Define default values for optional arguments
-    defaultRotation = eye(2);         % Default rotation matrix (identity matrix)
-    defaultTranslation = [0, 0];     % Default translation vector (origin)
     defaultScale = 1;                 % Default scale for basis vectors
     defaultLineWidth = 2;             % Default line width for quiver plot
     defaultColor = {'r', 'g'};        % Default colors for the x and y axes
 
-    % Initialize rotationMatrix and translationVector with default values
-    rotationMatrix = defaultRotation;
-    translationVector = defaultTranslation;
-
-    % Check if the first argument is a rotation matrix
-    if nargin >= 1 && isnumeric(varargin{1}) && isequal(size(varargin{1}), [2, 2])
-        rotationMatrix = varargin{1}; % Assign rotation matrix
-        varargin(1) = [];              % Remove the first argument from varargin
-    end
-
-    % Check if the second argument is a translation vector
-    if nargin >= 1 && isnumeric(varargin{1}) && numel(varargin{1}) == 2
-        translationVector = varargin{1}; % Assign translation vector
-        varargin(1) = [];                % Remove the second argument from varargin
-    end
+    % Validate input arguments
+    validateattributes(rotationMatrix, {'numeric'}, {'size', [2, 2]}, 'plot2DFrame', 'rotationMatrix');
+    validateattributes(translationVector, {'numeric'}, {'size', [1, 2]}, 'plot2DFrame', 'translationVector');
 
     % Create an input parser object to handle name-value pair arguments
     parser = inputParser;
@@ -44,7 +27,7 @@ function varargout = plot2DFrame(varargin)
     addParameter(parser, 'LineWidth', defaultLineWidth, @isscalar);
     addParameter(parser, 'Color', defaultColor, @(x) iscell(x) && length(x) == 2);
 
-    % Parse the remaining name-value pair arguments
+    % Parse the name-value pair arguments
     parse(parser, varargin{:});
 
     % Extract parsed values from the parser results
