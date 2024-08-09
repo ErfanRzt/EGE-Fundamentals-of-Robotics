@@ -1,4 +1,4 @@
-function varargout = plot3DFrame(rotationMatrix, translationVector, varargin)
+function varargout = plot3DFrame(homogMatrix, varargin)
     % PLOT3DFRAME Draw a 3-D Cartesian coordinate system.
     %
     %   plot3DFrame(rotationMatrix, translationVector)
@@ -18,8 +18,7 @@ function varargout = plot3DFrame(rotationMatrix, translationVector, varargin)
     defaultColor = {'r', 'g', 'b'};   % Default colors for the x, y, and z axes
 
     % Validate input arguments
-    validateattributes(rotationMatrix, {'numeric'}, {'size', [3, 3]}, 'plot3DFrame', 'rotationMatrix');
-    validateattributes(translationVector, {'numeric'}, {'size', [1, 3]}, 'plot3DFrame', 'translationVector');
+    validateattributes(homogMatrix, {'numeric'}, {'size', [4, 4]}, 'plot3DFrame', 'homogMatrix');
 
     % Create an input parser object to handle name-value pair arguments
     parser = inputParser;
@@ -34,6 +33,10 @@ function varargout = plot3DFrame(rotationMatrix, translationVector, varargin)
     scale = parser.Results.Scale;
     lineWidth = parser.Results.LineWidth;
     colors = parser.Results.Color;
+
+    % Extract Rotation Matrix and Translation Vector from Homogenous Matrix
+    rotationMatrix = homogMatrix(1:3, 1:3);
+    translationVector = homogMatrix(1:3,4);
 
     % Ensure scale is a 1x3 vector
     if isscalar(scale)
