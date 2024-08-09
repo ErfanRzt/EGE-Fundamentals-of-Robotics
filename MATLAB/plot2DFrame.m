@@ -37,7 +37,7 @@ function varargout = plot2DFrame(rotationMatrix, translationVector, varargin)
 
     % Ensure scale is a 1x2 vector
     if isscalar(scale)
-        scale = [scale, scale]; % Convert scalar to a 1x2 vector
+        scale = scale * [1, 1];     % Convert scalar to a 1x2 vector
     end
 
     % Compute basis vectors by scaling the rotation matrix

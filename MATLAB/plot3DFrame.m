@@ -1,16 +1,16 @@
 function varargout = plot3DFrame(rotationMatrix, translationVector, varargin)
-% PLOT3DFRAME Draw a 3-D Cartesian coordinate system.
-%
-%   plot3DFrame(rotationMatrix, translationVector)
-%   plot3DFrame(rotationMatrix, translationVector, 'Scale', 2, 'LineWidth', 3)
-%
-%   Name-Value Pair Arguments:
-%   - 'Scale': Scalar or 1x3 vector defining basis vector lengths (default: 1)
-%   - 'LineWidth': Line width for the quiver plot (default: 2)
-%   - 'Color': Cell array of colors for each axis (default: {'r', 'g', 'b'})
-%
-%   OUTPUT:
-%   - If requested, returns the handle of the current axes (gca).
+    % PLOT3DFRAME Draw a 3-D Cartesian coordinate system.
+    %
+    %   plot3DFrame(rotationMatrix, translationVector)
+    %   plot3DFrame(rotationMatrix, translationVector, 'Scale', 2, 'LineWidth', 3)
+    %
+    %   Name-Value Pair Arguments:
+    %   - 'Scale': Scalar or 1x3 vector defining basis vector lengths (default: 1)
+    %   - 'LineWidth': Line width for the quiver plot (default: 2)
+    %   - 'Color': Cell array of colors for each axis (default: {'r', 'g', 'b'})
+    %
+    %   OUTPUT:
+    %   - If requested, returns the handle of the current axes (gca).
 
     % Define default values for optional arguments
     defaultScale = 1;                 % Default scale for basis vectors
@@ -37,7 +37,7 @@ function varargout = plot3DFrame(rotationMatrix, translationVector, varargin)
 
     % Ensure scale is a 1x3 vector
     if isscalar(scale)
-        scale = [scale, scale, scale]; % Convert scalar to a 1x3 vector
+        scale = scale * [1, 1, 1];  % Convert scalar to a 1x3 vector
     end
 
     % Compute basis vectors by scaling the rotation matrix
