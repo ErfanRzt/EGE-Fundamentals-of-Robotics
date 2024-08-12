@@ -51,6 +51,7 @@ function varargout = plot2DFrame(rotationMatrix, translationVector, varargin)
                basisVectors(1, i), basisVectors(2, i), ...
                'Color', colors{i}, 'LineWidth', lineWidth, 'MaxHeadSize', 0.4);
     end
+    axis equal; view([0, 90]);
     hold off; % Release the current plot
 
     % Output the plot handle if requested
