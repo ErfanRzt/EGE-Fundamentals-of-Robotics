@@ -69,6 +69,7 @@ function varargout = plot3DFrame(homogMatrix, varargin)
                     'Color', colors{i}, 'LineWidth', lineWidth, 'MaxHeadSize', 0.5);
         end
     end
+    plotPoint(translationVector, 'MarkerType', markerType);
     
     axis equal; view([-37.5, 30]);
     hold off; % Release the current plot
