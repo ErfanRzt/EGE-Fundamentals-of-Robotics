@@ -93,8 +93,7 @@ classdef Link < matlab.mixin.Copyable
     
         function homogtf = get.homogtf(obj)
             % GET.HOMOGTF Calculates consecutive homogeneous transforms between coordinate frames.
-            % Placeholder implementation; replace with actual computation
-            homogtf = eye(4, 4); % Replace with actual computation
+            homogtf = cell2mat(dhTransforms(obj.dh));
         end
     end
 end
