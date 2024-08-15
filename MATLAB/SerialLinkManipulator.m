@@ -121,7 +121,12 @@ classdef SerialLinkManipulator < handle
             % GET.DH Retrieves the standard DH table.
             dh = zeros(obj.nLinks, 4);
             for i = 1:obj.nLinks
-                dh(i, :) = obj.links(i).dh;
+                linkType = lower(obj.links(i).type);
+                if strcmp(linkType, 'revolute') || strcmp(linkType, 'r')
+                    dh(i, :) = [obj.links(i).dh] .* [0, 1, 1, 1] + [obj.q(i), 0, 0, 0];
+                else
+                    dh(i, :) = [obj.links(i).dh] .* [1, 0, 1, 1] + [obj.q(i), 0, 0, 0];
+                end
             end
         end
         
@@ -134,7 +139,7 @@ classdef SerialLinkManipulator < handle
         function jointPoses = get.jointPoses(obj)
             % GET.JOINTPOSES Calculates the pose (position and orientation) of each joint.
             % Placeholder implementation; replace with actual computation
-            jointPoses = zeros(obj.nJoints, 6); % Replace with actual computation
+            jointPoses = zeros(obj.nJoints, 3); % Replace with actual computation
         end
         
         function toolTransform = get.tool(obj)
