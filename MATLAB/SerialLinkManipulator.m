@@ -2,122 +2,167 @@ classdef SerialLinkManipulator < handle
     % SERIALLINKMANIPULATOR Class representing a serial link manipulator.
     %
     % This class models a serial link manipulator using a vector of Link 
-    % objects. It initializes the manipulator by aggregating properties from 
-    % individual links, such as DH parameters, and manages the manipulator's 
-    % base and tool transformations.
+    % objects. It constructs the manipulator by aggregating properties of
+    % individual links and managing the manipulator's base and tool transformations.
     %
     % Properties:
-    %   name      - Name of the manipulator.
-    %   comment   - Additional comments or description.
-    %   gravity   - Gravity vector applied to the manipulator.
-    %   q         - Joint space variables (generalized coordinates).
-    %   plotopt   - Plotting options for visualization (e.g., colors, styles).
-    %   base      - Base transformation matrix (default: identity matrix).
-    %
-    % Protected Properties:
-    %   nLinks    - Number of links in the manipulator.
-    %   nJoints   - Number of joints (same as number of links).
-    %   links     - Vector of Link objects representing the links.
-    %   dh        - Aggregated DH parameters from all links.
-    %
-    % Dependent Properties:
-    %   tool      - Tool transformation matrix.
-    %
-    % Methods:
-    %   SerialLinkManipulator - Constructor to initialize the manipulator with a vector of Link objects.
+    %   name          - Name of the manipulator.
+    %   description   - Description or comments about the manipulator.
+    %   links         - Array of Link objects representing the links of the manipulator.
+    %   nLinks        - Number of links in the manipulator.
+    %   nJoints       - Number of joints in the manipulator.
+    %   q             - Joint space vector variables.
+    %   x             - Task space vector variables.
+    %   qlim          - Joint space position limits.
+    %   dh            - Standard DH table.
+    %   base          - Homogeneous transformation from world to base frame (default: eye(4)).
+    %   tool          - Homogeneous transformation from base to end-effector.
+    %   jointPoses    - Position of each joint.
+    %   homogtf       - Consecutive homogeneous transforms between coordinate frames.
+    %   homogtf2base  - Homogeneous transforms from each coordinate frame to the base.
+    %   gravity       - Vector representing gravitational effects.
 
     properties
-        name        % Name of the manipulator
-        comment     % Comment or description
-        gravity     % Gravity vector (default: [0; 0; 9.81])
-        q           % Joint space variables (generalized coordinates)
-        plotopt     % Plotting options (e.g., colors, styles)
-        base        % Base transformation matrix (default: identity matrix)
+        name          % Name of the manipulator
+        description   % Description or comments about the manipulator
+
+        links         % Array of Link objects
+        q             % Joint space vector variables
+        qlim          % Joint space position limits
+
+        base          % Homogeneous transformation from world to base frame
+        gravity       % Vector representing gravitational effects
     end
 
-    properties (SetAccess = protected)
-        nLinks      % Number of links in the manipulator
-        nJoints     % Number of joints (same as number of links)
-        links       % Vector of Link objects
-        dh          % Aggregated DH parameters from all links
+    properties (Dependent = true, SetAccess = protected)
+        nLinks        % Number of links in the manipulator
+        nJoints       % Number of joints in the manipulator
+        dh            % Standard DH table
+
+        x             % Task space vector variables
+        jointPoses    % Position of each joint
+
+        tool          % Homogeneous transformation from base to end-effector
+        homogtf       % Consecutive homogeneous transforms between coordinates
+        homogtf2base  % Homogeneous transforms from each coordinate frame to base
     end
 
-    properties (Dependent)
-        tool        % Tool transformation matrix
-    end
-
-    properties (Constant, Access = protected)
-        defaultName = 'NewRobot';                           % Default name for the manipulator
-        defaultComment = 'Serial Rigid Link Manipulator';   % Default comment
-        defaultGravity = [0; 0; 9.81];                     % Default gravity vector
-        defaultBase = eye(4);                             % Default base transformation matrix
+    properties (Access = protected)
+        defaultName = 'NewRobot'
+        defaultDescription = 'Serial Rigid Link Robot'
+        defaultGravity = [0; 0; -9.81]
+        defaultBase = eye(4)
+        defaultQLim
+        defaultQ
     end
 
     methods
-        function robot = SerialLinkManipulator(links, varargin)
+        function obj = SerialLinkManipulator(links, varargin)
             % SERIALLINKMANIPULATOR Construct a serial link manipulator.
             %
             % Syntax:
-            %   robot = SerialLinkManipulator(links)
+            %   obj = SerialLinkManipulator(links, 'Name', value, ...)
             %
             % Description:
             %   Initializes the manipulator using a vector of Link objects. 
-            %   Aggregates the DH parameters and determines the number of 
-            %   joints and links in the manipulator.
+            %   Aggregates properties like DH parameters and calculates various
+            %   transformation matrices and joint information.
             %
             % Input:
-            %   links - Vector of Link objects representing the links of the manipulator.
+            %   links - Array of Link objects representing the links of the manipulator.
             %
             % Optional Name-Value Pair Arguments:
-            %   'Name'    - Name of the manipulator (default: 'NewRobot').
-            %   'Comment' - Additional comments or description (default: 'Serial Rigid Link Manipulator').
-            %   'g'       - Gravity vector (default: [0; 0; 9.81]).
-            %   'Base'    - Base transformation matrix (default: identity matrix).
-            %
-            % Output:
-            %   robot - Instance of the SerialLinkManipulator class.
-
-            % Validate the input
-            if ~isa(links, 'Link') || ~isvector(links)
-                error('Input must be a vector of Link objects.');
-            end
-
-            % Parse optional name-value pair arguments
-            parser = inputParser;
-            addParameter(parser, 'Name', robot.defaultName, @(x) ischar(x) || isstring(x));
-            addParameter(parser, 'Comment', robot.defaultComment, @(x) ischar(x) || isstring(x));
-            addParameter(parser, 'g', robot.defaultGravity, @(x) isnumeric(x) && numel(x) == 3);
-            addParameter(parser, 'Base', robot.defaultBase, @(x) isnumeric(x) && isequal(size(x), [4, 4]));
-
-            parse(parser, varargin{:});
+            %   'Name'        - Name of the manipulator (default: 'NewRobot').
+            %   'Description' - Description or comments (default: 'Serial Rigid Link Manipulator').
+            %   'Gravity'     - Gravity vector affecting the manipulator (default: [0; 0; -9.81]).
+            %   'Base'        - Homogeneous transformation from world to base frame (default: eye(4)).
+            %   'q'           - Initial joint space vector variables.
+            %   'qlim'        - Joint space position limits.
             
-            % Assign parsed values to object properties
-            robot.name = parser.Results.Name;
-            robot.comment = parser.Results.Comment;
-            robot.gravity = parser.Results.g;
-            robot.base = parser.Results.Base;
 
             % Initialize properties
-            robot.links = links;
-            robot.nLinks = numel(links);
-            robot.nJoints = robot.nLinks; % Assuming each link corresponds to one joint
-            robot.dh = zeros(robot.nLinks, 4); % Preallocate DH parameters matrix
+            obj.links = links;
+            obj.defaultQ = zeros([1, obj.nJoints]);
+            obj.defaultQLim = [-inf inf] .* ones([obj.nJoints, 2]);
 
-            % Aggregate DH parameters from each link
-            for i = 1:robot.nLinks
-                robot.dh(i, :) = links(i).dh;
+            % Validate and assign input arguments
+            parser = inputParser;
+            addParameter(parser, 'Name',        obj.defaultName,        @(x) ischar(x) || isstring(x));
+            addParameter(parser, 'Description', obj.defaultDescription, @(x) ischar(x) || isstring(x));
+            addParameter(parser, 'Gravity',     obj.defaultGravity,     @(x) isnumeric(x) && numel(x) == 3);
+            addParameter(parser, 'Base',        obj.defaultBase,        @(x) isnumeric(x) && all(size(x) == [4 4]));
+            addParameter(parser, 'q',           obj.defaultQ,           @(x) isnumeric(x) && isvector(x) && numel(x) == obj.nJoints);
+            addParameter(parser, 'qlim',        obj.defaultQLim,        @(x) isnumeric(x) && size(x, 2) == 2);
+
+            parse(parser, varargin{:});
+
+            % Assign parsed values to object properties
+            obj.name = parser.Results.Name;
+            obj.description = parser.Results.Description;
+            obj.gravity = parser.Results.Gravity;
+            obj.base = parser.Results.Base;
+            obj.q = parser.Results.q;
+            obj.qlim = parser.Results.qlim;
+        end
+    end
+    
+    methods
+        function nLinks = get.nLinks(obj)
+            % GET.NLINKS Returns the number of links.
+            nLinks = numel(obj.links);
+        end
+        
+        function nJoints = get.nJoints(obj)
+            % GET.NJOINTS Returns the number of joints.
+            nJoints = obj.nLinks; % Assuming one joint per link
+        end
+        
+        function dh = get.dh(obj)
+            % GET.DH Retrieves the standard DH table.
+            dh = zeros(obj.nLinks, 4);
+            for i = 1:obj.nLinks
+                dh(i, :) = obj.links(i).dh;
             end
         end
         
-        function tool = get.tool(obj)
-            % GET.TOOL Returns the tool transformation matrix.
-            %
-            % Syntax:
-            %   tool = obj.tool
-            %
-            % Output:
-            %   tool - Tool transformation matrix. Default implementation returns an identity matrix.
-            tool = eye(4); % Default implementation, modify if needed
+        function x = get.x(obj)
+            % GET.X Calculates the task space vector variables.
+            % Placeholder implementation; replace with actual computation
+            x = []; % Replace with actual computation
         end
+        
+        function jointPoses = get.jointPoses(obj)
+            % GET.JOINTPOSES Calculates the pose (position and orientation) of each joint.
+            % Placeholder implementation; replace with actual computation
+            jointPoses = zeros(obj.nJoints, 6); % Replace with actual computation
+        end
+        
+        function toolTransform = get.tool(obj)
+            % GET.TOOL Retrieves the homogeneous transformation from base to end-effector.
+            % Placeholder implementation; replace with actual computation
+            toolTransform = eye(4); % Replace with actual computation
+        end
+        
+        function homogtf = get.homogtf(obj)
+            % GET.HOMOGTF Calculates consecutive homogeneous transforms between coordinate frames.
+            % Placeholder implementation; replace with actual computation
+            homogtf = eye(4, 4*obj.nLinks); % Replace with actual computation
+        end
+        
+        function homogtf2base = get.homogtf2base(obj)
+            % GET.HOMOGTF2BASE Calculates homogeneous transforms from each coordinate frame to the base.
+            % Placeholder implementation; replace with actual computation
+            homogtf2base = eye(4, 4*obj.nLinks); % Replace with actual computation
+        end
+        
+        % Additional methods for kinematics, dynamics, etc., can be added here
     end
 end
+
+
+%     properties (Constant, Access = protected)
+%         defaultName = 'NewRobot';                           % Default name for the manipulator
+%         defaultComment = 'Serial Rigid Link Manipulator';   % Default comment
+%         defaultGravity = [0; 0; 9.81];                     % Default gravity vector
+%         defaultBase = eye(4);                             % Default base transformation matrix
+%     end
