@@ -15,5 +15,5 @@ function plot3DStdFrame(varargin)
 
     % Call plot3DFrame with the identity rotation matrix and zero translation vector.
     % varargin{:} allows for any additional name-value pair arguments to be passed.
-    plot3DFrame([eye(3), [0; 0; 0]; 0, 0, 0, 1], varargin{:});
+    plot3DFrame(eye(4), varargin{:});
 end
