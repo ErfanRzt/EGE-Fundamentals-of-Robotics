@@ -26,7 +26,11 @@ classdef Link < matlab.mixin.Copyable
         I           % Inertia tensor (3x3 matrix)
     end
 
-    properties (Access=private, Constant)
+    properties (Dependent = true, SetAccess = protected)
+        homogtf     % Homogenous Matrix Transformation
+    end
+
+    properties (Constant, Access = protected)
         defaultName = 'NewLink';          % Default name for the link
         defaultType = 'Revolute';         % Default joint type
         defaultM = 0;                     % Default mass
@@ -48,7 +52,7 @@ classdef Link < matlab.mixin.Copyable
             %   parameters and optional dynamic properties.
             %
             % Input Arguments:
-            %   dhparams - (optional) DH parameters as a 1x4 vector [theta, d, a, alpha].
+            %   dhparams - DH parameters as a 1x4 vector [theta, d, a, alpha].
             %              If not provided, default is [0, 0, 0, 0].
             %
             %   Name-Value Pair Arguments:
@@ -85,6 +89,12 @@ classdef Link < matlab.mixin.Copyable
             obj.m = parser.Results.m;
             obj.r = parser.Results.r;
             obj.I = parser.Results.I;
+        end
+    
+        function homogtf = get.homogtf(obj)
+            % GET.HOMOGTF Calculates consecutive homogeneous transforms between coordinate frames.
+            % Placeholder implementation; replace with actual computation
+            homogtf = eye(4, 4); % Replace with actual computation
         end
     end
 end
