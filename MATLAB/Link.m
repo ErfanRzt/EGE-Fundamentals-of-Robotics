@@ -111,8 +111,7 @@ classdef Link < matlab.mixin.Copyable
         end
 
         function dh = get.dh(obj)
-            linkType = lower(obj.type);
-            if strcmp(linkType, 'revolute') || strcmp(linkType, 'r')
+            if isRevolute(obj)
                 dh = [obj.dhconst] .* [0, 1, 1, 1] + [obj.q + obj.offset, 0, 0, 0];
             else
                 dh = [obj.dhconst] .* [1, 0, 1, 1] + [0, obj.q + obj.offset, 0, 0];
