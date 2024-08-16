@@ -20,19 +20,28 @@ classdef Link < matlab.mixin.Copyable
     properties
         name        % Name of the link
         type        % Type of the joint: 'Revolute' or 'Prismatic'
-        dh          % Denavit-Hartenberg parameters
+
+        % kinematic level
+        q
+
         m           % Mass of the link
         r           % Center of mass (3x1 vector)
         I           % Inertia tensor (3x3 matrix)
     end
 
     properties (Dependent = true, SetAccess = protected)
+        dh          % Denavit-Hartenberg parameters
         homogtf     % Homogenous Matrix Transformation
+    end
+
+    properties (Access = protected)
+        dhconst
     end
 
     properties (Constant, Access = protected)
         defaultName = 'NewLink';          % Default name for the link
         defaultType = 'Revolute';         % Default joint type
+        defaultPose = 0;
         defaultM = 0;                     % Default mass
         defaultR = [0; 0; 0];             % Default center of mass
         defaultI = zeros(3, 3);           % Default inertia tensor
@@ -67,15 +76,16 @@ classdef Link < matlab.mixin.Copyable
 
             % Check if DH parameters are provided; otherwise, use default
             if nargin < 1 || isempty(dhparams)
-                obj.dh = obj.defaultDH;
+                obj.dhconst = obj.defaultDH;
             else
-                obj.dh = dhparams;
+                obj.dhconst = dhparams;
             end
 
             % Parse optional name-value pair arguments for other properties
             parser = inputParser;
             addParameter(parser, 'Name', obj.defaultName, @(x) ischar(x) || isstring(x));
             addParameter(parser, 'Type', obj.defaultType, @(x) ischar(x) || isstring(x));
+            addParameter(parser, 'q', obj.defaultPose, @isscalar);
             addParameter(parser, 'm', obj.defaultM, @isscalar);
             addParameter(parser, 'r', obj.defaultR, @(x) isnumeric(x) && numel(x) == 3);
             addParameter(parser, 'I', obj.defaultI, @(x) isnumeric(x) && all(size(x) == [3 3]));
@@ -86,11 +96,21 @@ classdef Link < matlab.mixin.Copyable
             % Assign parsed values to object properties
             obj.name = parser.Results.Name;
             obj.type = parser.Results.Type;
+            obj.q = parser.Results.q;
             obj.m = parser.Results.m;
             obj.r = parser.Results.r;
             obj.I = parser.Results.I;
         end
-    
+
+        function dh = get.dh(obj)
+            linkType = lower(obj.type);
+            if strcmp(linkType, 'revolute') || strcmp(linkType, 'r')
+                dh = [obj.dhconst] .* [0, 1, 1, 1] + [obj.q, 0, 0, 0];
+            else
+                dh = [obj.dhconst] .* [1, 0, 1, 1] + [0, obj.q, 0, 0];
+            end
+        end
+
         function homogtf = get.homogtf(obj)
             % GET.HOMOGTF Calculates consecutive homogeneous transforms between coordinate frames.
             homogtf = cell2mat(dhTransforms(obj.dh));
