@@ -30,7 +30,7 @@ classdef Link < matlab.mixin.Copyable
 
     properties (Dependent = true, SetAccess = protected)
         dh          % Denavit-Hartenberg parameters
-        
+        offset      % offset from the input joint variable
         homogtf     % Homogenous Matrix Transformation
     end
 
@@ -102,12 +102,20 @@ classdef Link < matlab.mixin.Copyable
             obj.I = parser.Results.I;
         end
 
+        function offset = get.offset(obj)
+            if isRevolute(obj)
+                offset = obj.dhconst(1);
+            else
+                offset = obj.dhconst(2);
+            end
+        end
+
         function dh = get.dh(obj)
             linkType = lower(obj.type);
             if strcmp(linkType, 'revolute') || strcmp(linkType, 'r')
-                dh = [obj.dhconst] .* [0, 1, 1, 1] + [obj.q, 0, 0, 0];
+                dh = [obj.dhconst] .* [0, 1, 1, 1] + [obj.q + obj.offset, 0, 0, 0];
             else
-                dh = [obj.dhconst] .* [1, 0, 1, 1] + [0, obj.q, 0, 0];
+                dh = [obj.dhconst] .* [1, 0, 1, 1] + [0, obj.q + obj.offset, 0, 0];
             end
         end
 
