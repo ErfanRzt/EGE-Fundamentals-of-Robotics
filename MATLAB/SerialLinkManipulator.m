@@ -125,7 +125,7 @@ classdef SerialLinkManipulator < handle
                 if strcmp(linkType, 'revolute') || strcmp(linkType, 'r')
                     dh(i, :) = [obj.links(i).dh] .* [0, 1, 1, 1] + [obj.q(i), 0, 0, 0];
                 else
-                    dh(i, :) = [obj.links(i).dh] .* [1, 0, 1, 1] + [obj.q(i), 0, 0, 0];
+                    dh(i, :) = [obj.links(i).dh] .* [1, 0, 1, 1] + [0, obj.q(i), 0, 0];
                 end
             end
         end
@@ -163,11 +163,3 @@ classdef SerialLinkManipulator < handle
         % Additional methods for kinematics, dynamics, etc., can be added here
     end
 end
-
-
-%     properties (Constant, Access = protected)
-%         defaultName = 'NewRobot';                           % Default name for the manipulator
-%         defaultComment = 'Serial Rigid Link Manipulator';   % Default comment
-%         defaultGravity = [0; 0; 9.81];                     % Default gravity vector
-%         defaultBase = eye(4);                             % Default base transformation matrix
-%     end
