@@ -1,18 +1,25 @@
 classdef Link < matlab.mixin.Copyable
     % LINK Class representing a single rigid link in a serial manipulator.
-    % 
+    %
     % This class defines a rigid link object characterized by its
     % Denavit-Hartenberg (DH) parameters, dynamic properties such as mass,
     % center of mass, and inertia tensor. It also supports copying the object 
     % to create independent instances.
     %
     % Properties:
-    %   name  - Name of the link (default: 'NewLink')
-    %   type  - Type of the joint, either 'Revolute' or 'Prismatic' (default: 'Revolute')
-    %   dh    - Denavit-Hartenberg parameters [theta, d, a, alpha] (default: [0, 0, 0, 0])
-    %   m     - Mass of the link (default: 0)
-    %   r     - Center of mass in the local frame (3x1 vector) (default: [0; 0; 0])
-    %   I     - Inertia tensor in the local frame (3x3 matrix) (default: zeros(3,3))
+    %   name  - (char or string) Name of the link (default: 'NewLink')
+    %   type  - (char or string) Type of the joint, either 'Revolute' or 'Prismatic' (default: 'Revolute')
+    %   q     - (scalar) Joint variable (default: 0)
+    %   qlim  - (1x2 numeric array) Joint limits [min, max] (default: [-inf, inf])
+    %   m     - (scalar) Mass of the link (default: 0)
+    %   r     - (3x1 numeric vector) Center of mass in the local frame (default: [0; 0; 0])
+    %   I     - (3x3 numeric matrix) Inertia tensor in the local frame (default: zeros(3,3))
+    %
+    % Dependent Properties (Read-only):
+    %   qsat  - (scalar) Saturated joint variable within the specified limits
+    %   dh    - (1x4 numeric array) Denavit-Hartenberg parameters [theta, d, a, alpha]
+    %   offset- (scalar) Offset from the input joint variable
+    %   homogtf - (4x4 numeric matrix) Homogeneous transformation matrix
     %
     % Methods:
     %   Link  - Constructor method for initializing the Link object.
@@ -21,8 +28,8 @@ classdef Link < matlab.mixin.Copyable
         name        % Name of the link
         type        % Type of the joint: 'Revolute' or 'Prismatic'
 
-        q
-        qlim
+        q           % Joint variable
+        qlim        % Joint limits [min, max]
 
         m           % Mass of the link
         r           % Center of mass (3x1 vector)
@@ -30,22 +37,21 @@ classdef Link < matlab.mixin.Copyable
     end
 
     properties (Dependent = true, SetAccess = protected)
-        qsat        % saturated q
-
+        qsat        % Saturated joint variable
         dh          % Denavit-Hartenberg parameters
-        offset      % offset from the input joint variable
-        homogtf     % Homogenous Matrix Transformation
+        offset      % Offset from the input joint variable
+        homogtf     % Homogeneous transformation matrix
     end
 
     properties (Access = protected)
-        dhconst
+        dhconst     % Constant DH parameters
     end
 
     properties (Constant, Access = protected)
         defaultName = 'NewLink';          % Default name for the link
         defaultType = 'Revolute';         % Default joint type
-        defaultQLim = [-inf,inf];
-        defaultQ = 0;
+        defaultQLim = [-inf, inf];        % Default joint limits
+        defaultQ = 0;                     % Default joint variable
         defaultM = 0;                     % Default mass
         defaultR = [0; 0; 0];             % Default center of mass
         defaultI = zeros(3, 3);           % Default inertia tensor
@@ -65,15 +71,17 @@ classdef Link < matlab.mixin.Copyable
             %   parameters and optional dynamic properties.
             %
             % Input Arguments:
-            %   dhparams - DH parameters as a 1x4 vector [theta, d, a, alpha].
+            %   dhparams - (1x4 numeric array) DH parameters [theta, d, a, alpha].
             %              If not provided, default is [0, 0, 0, 0].
             %
             %   Name-Value Pair Arguments:
-            %     'Name' - (optional) Name of the link (default: 'NewLink').
-            %     'Type' - (optional) Type of joint: 'Revolute' or 'Prismatic' (default: 'Revolute').
-            %     'm'    - (optional) Mass of the link (default: 0).
-            %     'r'    - (optional) Center of mass as a 3x1 vector (default: [0; 0; 0]).
-            %     'I'    - (optional) Inertia tensor as a 3x3 matrix (default: zeros(3,3)).
+            %     'Name' - (char or string, optional) Name of the link (default: 'NewLink').
+            %     'Type' - (char or string, optional) Type of joint: 'Revolute' or 'Prismatic' (default: 'Revolute').
+            %     'qlim' - (1x2 numeric array, optional) Joint limits [min, max] (default: [-inf, inf]).
+            %     'q'    - (scalar, optional) Joint variable (default: 0).
+            %     'm'    - (scalar, optional) Mass of the link (default: 0).
+            %     'r'    - (3x1 numeric vector, optional) Center of mass (default: [0; 0; 0]).
+            %     'I'    - (3x3 numeric matrix, optional) Inertia tensor (default: zeros(3,3)).
             %
             % Output:
             %   obj - Instance of the Link class.
@@ -109,6 +117,11 @@ classdef Link < matlab.mixin.Copyable
         end
 
         function qsat = get.qsat(obj)
+            % GET.QSAT Returns the saturated joint variable within limits.
+            %
+            % Output:
+            %   qsat - (scalar) Saturated joint variable within the range of qlim.
+
             if obj.q >= max(obj.qlim)
                 qsat = max(obj.qlim);
             elseif obj.q <= min(obj.qlim)
@@ -116,18 +129,28 @@ classdef Link < matlab.mixin.Copyable
             else
                 qsat = obj.q;
             end
-
         end
 
         function offset = get.offset(obj)
+            % GET.OFFSET Returns the offset from the input joint variable.
+            %
+            % Output:
+            %   offset - (scalar) Offset from the input joint variable based on the joint type.
+
             if isRevolute(obj)
-                offset = obj.dhconst(1);
+                offset = obj.dhconst(1);  % Offset is theta for revolute joints
             else
-                offset = obj.dhconst(2);
+                offset = obj.dhconst(2);  % Offset is d for prismatic joints
             end
         end
 
         function dh = get.dh(obj)
+            % GET.DH Returns the Denavit-Hartenberg parameters.
+            %
+            % Output:
+            %   dh - (1x4 numeric array) DH parameters [theta, d, a, alpha].
+            %        Depending on the joint type, theta or d is adjusted by the joint variable q.
+
             if isRevolute(obj)
                 dh = [obj.dhconst] .* [0, 1, 1, 1] + [obj.qsat + obj.offset, 0, 0, 0];
             else
@@ -136,13 +159,22 @@ classdef Link < matlab.mixin.Copyable
         end
 
         function homogtf = get.homogtf(obj)
-            % GET.HOMOGTF Calculates consecutive homogeneous transforms between coordinate frames.
+            % GET.HOMOGTF Calculates the homogeneous transformation matrix.
+            %
+            % Output:
+            %   homogtf - (4x4 numeric matrix) Homogeneous transformation matrix from the DH parameters.
+
             homogtf = cell2mat(dhTransforms(obj.dh));
         end
     end
 
     methods (Access = private)
-	    function isrev = isRevolute(obj)
+        function isrev = isRevolute(obj)
+            % ISREVOLUTE Checks if the link is a revolute joint.
+            %
+            % Output:
+            %   isrev - (logical) True if the link is a revolute joint, otherwise false.
+
             isrev = false;
 
             linkType = lower(obj.type);
@@ -152,6 +184,11 @@ classdef Link < matlab.mixin.Copyable
         end
 
         function ispris = isPrismatic(obj)
+            % ISPRISMATIC Checks if the link is a prismatic joint.
+            %
+            % Output:
+            %   ispris - (logical) True if the link is a prismatic joint, otherwise false.
+
             ispris = ~isRevolute(obj);
         end
     end
