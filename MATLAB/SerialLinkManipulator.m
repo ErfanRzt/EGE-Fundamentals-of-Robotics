@@ -13,11 +13,10 @@ classdef SerialLinkManipulator < handle
     %   nJoints       - Number of joints in the manipulator.
     %   q             - Joint space vector variables.
     %   x             - Task space vector variables.
-    %   qlim          - Joint space position limits.
     %   dh            - Standard DH table.
     %   base          - Homogeneous transformation from world to base frame (default: eye(4)).
     %   tool          - Homogeneous transformation from base to end-effector.
-    %   jointPoses    - Position of each joint.
+    %   jointPose     - Position of each joint.
     %   homogtf       - Consecutive homogeneous transforms between coordinate frames.
     %   homogtf2base  - Homogeneous transforms from each coordinate frame to the base.
     %   gravity       - Vector representing gravitational effects.
@@ -28,7 +27,6 @@ classdef SerialLinkManipulator < handle
 
         links         % Array of Link objects
         q             % Joint space vector variables
-        qlim          % Joint space position limits
 
         base          % Homogeneous transformation from world to base frame
         gravity       % Vector representing gravitational effects
@@ -40,7 +38,7 @@ classdef SerialLinkManipulator < handle
         dh            % Standard DH table
 
         x             % Task space vector variables
-        jointPoses    % Position of each joint
+        jointPose    % Position of each joint
 
         tool          % Homogeneous transformation from base to end-effector
         homogtf       % Consecutive homogeneous transforms between coordinates
@@ -52,7 +50,6 @@ classdef SerialLinkManipulator < handle
         defaultDescription = 'Serial Rigid Link Robot'
         defaultGravity = [0; 0; -9.81]
         defaultBase = eye(4)
-        defaultQLim
         defaultQ
     end
 
@@ -77,13 +74,10 @@ classdef SerialLinkManipulator < handle
             %   'Gravity'     - Gravity vector affecting the manipulator (default: [0; 0; -9.81]).
             %   'Base'        - Homogeneous transformation from world to base frame (default: eye(4)).
             %   'q'           - Initial joint space vector variables.
-            %   'qlim'        - Joint space position limits.
             
-
             % Initialize properties
             obj.links = links;
             obj.defaultQ = zeros([1, obj.nJoints]);
-            obj.defaultQLim = [-inf inf] .* ones([obj.nJoints, 2]);
 
             % Validate and assign input arguments
             parser = inputParser;
@@ -92,7 +86,6 @@ classdef SerialLinkManipulator < handle
             addParameter(parser, 'Gravity',     obj.defaultGravity,     @(x) isnumeric(x) && numel(x) == 3);
             addParameter(parser, 'Base',        obj.defaultBase,        @(x) isnumeric(x) && all(size(x) == [4 4]));
             addParameter(parser, 'q',           obj.defaultQ,           @(x) isnumeric(x) && isvector(x) && numel(x) == obj.nJoints);
-            addParameter(parser, 'qlim',        obj.defaultQLim,        @(x) isnumeric(x) && size(x, 2) == 2);
 
             parse(parser, varargin{:});
 
@@ -102,7 +95,6 @@ classdef SerialLinkManipulator < handle
             obj.gravity = parser.Results.Gravity;
             obj.base = parser.Results.Base;
             obj.q = parser.Results.q;
-            obj.qlim = parser.Results.qlim;
         end
     end
     
@@ -116,7 +108,7 @@ classdef SerialLinkManipulator < handle
             % GET.NJOINTS Returns the number of joints.
             nJoints = obj.nLinks; % Assuming one joint per link
         end
-        
+
         function dh = get.dh(obj)
             % GET.DH Retrieves the standard DH table.
             dh = zeros(obj.nLinks, 4);
@@ -136,10 +128,10 @@ classdef SerialLinkManipulator < handle
             x = []; % Replace with actual computation
         end
         
-        function jointPoses = get.jointPoses(obj)
-            % GET.JOINTPOSES Calculates the pose (position and orientation) of each joint.
+        function jointPose = get.jointPose(obj)
+            % GET.JOINTPOSE Calculates the pose (position and orientation) of each joint.
             % Placeholder implementation; replace with actual computation
-            jointPoses = zeros(obj.nJoints, 3); % Replace with actual computation
+            jointPose = zeros(obj.nJoints, 3); % Replace with actual computation
         end
         
         function toolTransform = get.tool(obj)
