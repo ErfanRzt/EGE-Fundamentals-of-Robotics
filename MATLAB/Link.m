@@ -21,8 +21,7 @@ classdef Link < matlab.mixin.Copyable
         name        % Name of the link
         type        % Type of the joint: 'Revolute' or 'Prismatic'
 
-        % kinematic level
-        q
+        q           % 
 
         m           % Mass of the link
         r           % Center of mass (3x1 vector)
@@ -31,6 +30,7 @@ classdef Link < matlab.mixin.Copyable
 
     properties (Dependent = true, SetAccess = protected)
         dh          % Denavit-Hartenberg parameters
+        
         homogtf     % Homogenous Matrix Transformation
     end
 
@@ -114,6 +114,21 @@ classdef Link < matlab.mixin.Copyable
         function homogtf = get.homogtf(obj)
             % GET.HOMOGTF Calculates consecutive homogeneous transforms between coordinate frames.
             homogtf = cell2mat(dhTransforms(obj.dh));
+        end
+    end
+
+    methods (Access = private)
+	    function isrev = isRevolute(obj)
+            isrev = false;
+
+            linkType = lower(obj.type);
+            if strcmp(linkType, 'revolute') || strcmp(linkType, 'r')
+                isrev = true;
+            end
+        end
+
+        function ispris = isPrismatic(obj)
+            ispris = ~isRevolute(obj);
         end
     end
 end
