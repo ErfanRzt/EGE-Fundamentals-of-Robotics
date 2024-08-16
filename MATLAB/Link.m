@@ -21,7 +21,8 @@ classdef Link < matlab.mixin.Copyable
         name        % Name of the link
         type        % Type of the joint: 'Revolute' or 'Prismatic'
 
-        q           % 
+        q
+        qlim
 
         m           % Mass of the link
         r           % Center of mass (3x1 vector)
@@ -29,6 +30,8 @@ classdef Link < matlab.mixin.Copyable
     end
 
     properties (Dependent = true, SetAccess = protected)
+        qsat        % saturated q
+
         dh          % Denavit-Hartenberg parameters
         offset      % offset from the input joint variable
         homogtf     % Homogenous Matrix Transformation
@@ -41,7 +44,8 @@ classdef Link < matlab.mixin.Copyable
     properties (Constant, Access = protected)
         defaultName = 'NewLink';          % Default name for the link
         defaultType = 'Revolute';         % Default joint type
-        defaultPose = 0;
+        defaultQLim = [-inf,inf];
+        defaultQ = 0;
         defaultM = 0;                     % Default mass
         defaultR = [0; 0; 0];             % Default center of mass
         defaultI = zeros(3, 3);           % Default inertia tensor
@@ -85,7 +89,8 @@ classdef Link < matlab.mixin.Copyable
             parser = inputParser;
             addParameter(parser, 'Name', obj.defaultName, @(x) ischar(x) || isstring(x));
             addParameter(parser, 'Type', obj.defaultType, @(x) ischar(x) || isstring(x));
-            addParameter(parser, 'q', obj.defaultPose, @isscalar);
+            addParameter(parser, 'qlim', obj.defaultQLim, @(x) isnumeric(x) && numel(x) == 2);
+            addParameter(parser, 'q', obj.defaultQ, @isscalar);
             addParameter(parser, 'm', obj.defaultM, @isscalar);
             addParameter(parser, 'r', obj.defaultR, @(x) isnumeric(x) && numel(x) == 3);
             addParameter(parser, 'I', obj.defaultI, @(x) isnumeric(x) && all(size(x) == [3 3]));
@@ -96,10 +101,22 @@ classdef Link < matlab.mixin.Copyable
             % Assign parsed values to object properties
             obj.name = parser.Results.Name;
             obj.type = parser.Results.Type;
+            obj.qlim = parser.Results.qlim;
             obj.q = parser.Results.q;
             obj.m = parser.Results.m;
             obj.r = parser.Results.r;
             obj.I = parser.Results.I;
+        end
+
+        function qsat = get.qsat(obj)
+            if obj.q >= max(obj.qlim)
+                qsat = max(obj.qlim);
+            elseif obj.q <= min(obj.qlim)
+                qsat = min(obj.qlim);
+            else
+                qsat = obj.q;
+            end
+
         end
 
         function offset = get.offset(obj)
@@ -112,9 +129,9 @@ classdef Link < matlab.mixin.Copyable
 
         function dh = get.dh(obj)
             if isRevolute(obj)
-                dh = [obj.dhconst] .* [0, 1, 1, 1] + [obj.q + obj.offset, 0, 0, 0];
+                dh = [obj.dhconst] .* [0, 1, 1, 1] + [obj.qsat + obj.offset, 0, 0, 0];
             else
-                dh = [obj.dhconst] .* [1, 0, 1, 1] + [0, obj.q + obj.offset, 0, 0];
+                dh = [obj.dhconst] .* [1, 0, 1, 1] + [0, obj.qsat + obj.offset, 0, 0];
             end
         end
 
