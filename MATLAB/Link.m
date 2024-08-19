@@ -18,7 +18,6 @@ classdef Link < matlab.mixin.Copyable
     % Dependent Properties (Read-only):
     %   qsat  - (scalar) Saturated joint variable within the specified limits
     %   dh    - (1x4 numeric array) Denavit-Hartenberg parameters [theta, d, a, alpha]
-    %   offset- (scalar) Offset from the input joint variable
     %   homogtf - (4x4 numeric matrix) Homogeneous transformation matrix
     %
     % Methods:
@@ -52,7 +51,6 @@ classdef Link < matlab.mixin.Copyable
         defaultType = 'Revolute';         % Default joint type
         defaultQLim = [-inf, inf];        % Default joint limits
         defaultQ = 0;                     % Default joint variable
-        defaultOffset = 0;                % Default offset
         defaultM = 0;                     % Default mass
         defaultR = [0; 0; 0];             % Default center of mass
         defaultI = zeros(3, 3);           % Default inertia tensor
@@ -78,7 +76,6 @@ classdef Link < matlab.mixin.Copyable
             %   Name-Value Pair Arguments:
             %     'Name'    - (char or string, optional) Name of the link (default: 'NewLink').
             %     'Type'    - (char or string, optional) Type of joint: 'Revolute' or 'Prismatic' (default: 'Revolute').
-            %     'Offset'  - (scalar, optional) Offset from the input joint variable (default: derived from dhparams).
             %     'qlim'    - (1x2 numeric array, optional) Joint limits [min, max] (default: [-inf, inf]).
             %     'q'       - (scalar, optional) Joint variable (default: 0).
             %     'm'       - (scalar, optional) Mass of the link (default: 0).
@@ -101,7 +98,6 @@ classdef Link < matlab.mixin.Copyable
             addParameter(parser, 'Type', obj.defaultType, @(x) ischar(x) || isstring(x));
             addParameter(parser, 'qlim', obj.defaultQLim, @(x) isnumeric(x) && numel(x) == 2);
             addParameter(parser, 'q', obj.defaultQ, @isscalar);
-            addParameter(parser, 'Offset', obj.defaultOffset, @isscalar);
             addParameter(parser, 'm', obj.defaultM, @isscalar);
             addParameter(parser, 'r', obj.defaultR, @(x) isnumeric(x) && numel(x) == 3);
             addParameter(parser, 'I', obj.defaultI, @(x) isnumeric(x) && all(size(x) == [3 3]));
@@ -118,17 +114,10 @@ classdef Link < matlab.mixin.Copyable
             obj.r = parser.Results.r;
             obj.I = parser.Results.I;
 
-            % Set the offset value
-            if parser.Results.Offset == obj.defaultOffset
-                % If offset is not provided, derive it from DH parameters
-                if isRevolute(obj)
-                    obj.offset = obj.dhconst(1);  % Offset is theta for revolute joints
-                else
-                    obj.offset = obj.dhconst(2);  % Offset is d for prismatic joints
-                end
+            if isRevolute(obj)
+                obj.offset = obj.dhconst(1);  % Offset is theta for revolute joints
             else
-                % Use the provided offset
-                obj.offset = parser.Results.Offset;
+                obj.offset = obj.dhconst(2);  % Offset is d for prismatic joints
             end
         end
 
