@@ -38,7 +38,7 @@ classdef SerialLinkManipulator < handle
         dh            % Standard DH table
 
         x             % Task space vector variables
-        jointPose    % Position of each joint
+        jointPose     % Position of each joint
 
         tool          % Homogeneous transformation from base to end-effector
         homogtf       % Consecutive homogeneous transforms between coordinates
@@ -50,7 +50,7 @@ classdef SerialLinkManipulator < handle
         defaultDescription = 'Serial Rigid Link Robot'
         defaultGravity = [0; 0; -9.81]
         defaultBase = eye(4)
-        defaultQ
+%         defaultQ
     end
 
     methods
@@ -77,7 +77,11 @@ classdef SerialLinkManipulator < handle
             
             % Initialize properties
             obj.links = links;
-            obj.defaultQ = zeros([1, obj.nJoints]);
+
+            obj.q = zeros([obj.nJoints, 1]);
+%             for i = 1:obj.nJoints
+%                 obj.defaultQ(i) = obj.links(i).q;
+%             end
 
             % Validate and assign input arguments
             parser = inputParser;
@@ -85,7 +89,7 @@ classdef SerialLinkManipulator < handle
             addParameter(parser, 'Description', obj.defaultDescription, @(x) ischar(x) || isstring(x));
             addParameter(parser, 'Gravity',     obj.defaultGravity,     @(x) isnumeric(x) && numel(x) == 3);
             addParameter(parser, 'Base',        obj.defaultBase,        @(x) isnumeric(x) && all(size(x) == [4 4]));
-            addParameter(parser, 'q',           obj.defaultQ,           @(x) isnumeric(x) && isvector(x) && numel(x) == obj.nJoints);
+%             addParameter(parser, 'q',           obj.defaultQ,           @(x) isnumeric(x) && isvector(x) && numel(x) == obj.nJoints);
 
             parse(parser, varargin{:});
 
@@ -94,7 +98,13 @@ classdef SerialLinkManipulator < handle
             obj.description = parser.Results.Description;
             obj.gravity = parser.Results.Gravity;
             obj.base = parser.Results.Base;
-            obj.q = parser.Results.q;
+%             obj.q = parser.Results.q;
+
+%             if ~(obj.q == obj.defaultQ)
+%                 for i = 1:obj.nLinks
+%                     obj.links(i).q = obj.q(i);
+%                 end
+%             end
         end
     end
     
@@ -109,6 +119,13 @@ classdef SerialLinkManipulator < handle
             nJoints = obj.nLinks; % Assuming one joint per link
         end
 
+%         function set.q(obj, value)
+%             for i = 1:obj.nJoints
+%                 obj.links(i).q = value;
+%                 obj.q(i) = obj.links(i).q;
+%             end
+%         end
+
         function dh = get.dh(obj)
             % GET.DH Retrieves the standard DH table.
             dh = zeros(obj.nLinks, 4);
@@ -121,7 +138,14 @@ classdef SerialLinkManipulator < handle
                 end
             end
         end
-        
+
+        function updateJointStates(obj, jspace)
+            for i = 1:obj.nLinks
+                obj.links(i).q = jspace(i);
+                obj.q(i) = obj.links(i).q;
+            end
+        end
+
         function x = get.x(obj)
             % GET.X Calculates the task space vector variables.
             % Placeholder implementation; replace with actual computation
