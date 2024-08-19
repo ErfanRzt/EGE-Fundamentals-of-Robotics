@@ -26,7 +26,6 @@ classdef SerialLinkManipulator < handle
         description   % Description or comments about the manipulator
 
         links         % Array of Link objects
-        q             % Joint space vector variables
 
         base          % Homogeneous transformation from world to base frame
         gravity       % Vector representing gravitational effects
@@ -37,6 +36,7 @@ classdef SerialLinkManipulator < handle
         nJoints       % Number of joints in the manipulator
         dh            % Standard DH table
 
+        q             % Joint space vector variables
         x             % Task space vector variables
         jointPose     % Position of each joint
 
@@ -50,7 +50,6 @@ classdef SerialLinkManipulator < handle
         defaultDescription = 'Serial Rigid Link Robot'
         defaultGravity = [0; 0; -9.81]
         defaultBase = eye(4)
-%         defaultQ
     end
 
     methods
@@ -78,18 +77,12 @@ classdef SerialLinkManipulator < handle
             % Initialize properties
             obj.links = links;
 
-            obj.q = zeros([obj.nJoints, 1]);
-%             for i = 1:obj.nJoints
-%                 obj.defaultQ(i) = obj.links(i).q;
-%             end
-
             % Validate and assign input arguments
             parser = inputParser;
             addParameter(parser, 'Name',        obj.defaultName,        @(x) ischar(x) || isstring(x));
             addParameter(parser, 'Description', obj.defaultDescription, @(x) ischar(x) || isstring(x));
             addParameter(parser, 'Gravity',     obj.defaultGravity,     @(x) isnumeric(x) && numel(x) == 3);
             addParameter(parser, 'Base',        obj.defaultBase,        @(x) isnumeric(x) && all(size(x) == [4 4]));
-%             addParameter(parser, 'q',           obj.defaultQ,           @(x) isnumeric(x) && isvector(x) && numel(x) == obj.nJoints);
 
             parse(parser, varargin{:});
 
@@ -98,13 +91,6 @@ classdef SerialLinkManipulator < handle
             obj.description = parser.Results.Description;
             obj.gravity = parser.Results.Gravity;
             obj.base = parser.Results.Base;
-%             obj.q = parser.Results.q;
-
-%             if ~(obj.q == obj.defaultQ)
-%                 for i = 1:obj.nLinks
-%                     obj.links(i).q = obj.q(i);
-%                 end
-%             end
         end
     end
     
@@ -119,61 +105,44 @@ classdef SerialLinkManipulator < handle
             nJoints = obj.nLinks; % Assuming one joint per link
         end
 
-%         function set.q(obj, value)
-%             for i = 1:obj.nJoints
-%                 obj.links(i).q = value;
-%                 obj.q(i) = obj.links(i).q;
-%             end
-%         end
-
         function dh = get.dh(obj)
             % GET.DH Retrieves the standard DH table.
-            dh = zeros(obj.nLinks, 4);
-            for i = 1:obj.nLinks
-                linkType = lower(obj.links(i).type);
-                if strcmp(linkType, 'revolute') || strcmp(linkType, 'r')
-                    dh(i, :) = [obj.links(i).dh] .* [0, 1, 1, 1] + [obj.q(i), 0, 0, 0];
-                else
-                    dh(i, :) = [obj.links(i).dh] .* [1, 0, 1, 1] + [0, obj.q(i), 0, 0];
-                end
-            end
+            dh = vertcat(obj.links.dh);
         end
 
-        function updateJointStates(obj, jspace)
-            for i = 1:obj.nLinks
-                obj.links(i).q = jspace(i);
-                obj.q(i) = obj.links(i).q;
-            end
+        function q = get.q(obj)
+            q = [obj.links.q]';
         end
 
         function x = get.x(obj)
             % GET.X Calculates the task space vector variables.
-            % Placeholder implementation; replace with actual computation
-            x = []; % Replace with actual computation
+            x = obj.tool(1:3, 4);
         end
         
         function jointPose = get.jointPose(obj)
             % GET.JOINTPOSE Calculates the pose (position and orientation) of each joint.
-            % Placeholder implementation; replace with actual computation
-            jointPose = zeros(obj.nJoints, 3); % Replace with actual computation
+            jointPose = zeros(3,  obj.nJoints);
+            jointPose(:,1)  = obj.base(1:3, 4);
+            for i = 1:obj.nJoints-1
+                homog2base = cell2mat(obj.homogtf2base(i));
+                jointPose(:, i+1) = homog2base(1:3, 4);
+            end
         end
         
         function toolTransform = get.tool(obj)
             % GET.TOOL Retrieves the homogeneous transformation from base to end-effector.
-            % Placeholder implementation; replace with actual computation
-            toolTransform = eye(4); % Replace with actual computation
+            toolTransform = cell2mat(obj.homogtf2base(obj.nLinks));
         end
         
         function homogtf = get.homogtf(obj)
             % GET.HOMOGTF Calculates consecutive homogeneous transforms between coordinate frames.
-            % Placeholder implementation; replace with actual computation
-            homogtf = eye(4, 4*obj.nLinks); % Replace with actual computation
+            homogtf = vertcat(obj.links.homogtf);
+            homogtf = mat2cell(homogtf, 4*ones([1, obj.nJoints]), 4);
         end
         
         function homogtf2base = get.homogtf2base(obj)
             % GET.HOMOGTF2BASE Calculates homogeneous transforms from each coordinate frame to the base.
-            % Placeholder implementation; replace with actual computation
-            homogtf2base = eye(4, 4*obj.nLinks); % Replace with actual computation
+            homogtf2base = homogTF2Base(obj.homogtf);
         end
         
         % Additional methods for kinematics, dynamics, etc., can be added here
