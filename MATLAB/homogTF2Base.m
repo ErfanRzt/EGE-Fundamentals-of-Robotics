@@ -21,7 +21,7 @@ function baseTransforms = homogTF2Base(homogTransforms)
     nJoints = numel(homogTransforms);
     
     % Preallocate a cell array to store the transformation matrices to the base frame
-    baseTransforms = cell(1, nJoints);
+    baseTransforms = cell(nJoints, 1);
     
     % Initialize the cumulative product of transformation matrices with the identity matrix
     productTF = eye(4);
