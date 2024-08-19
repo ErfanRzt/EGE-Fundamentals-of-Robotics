@@ -1,27 +1,26 @@
 classdef Link < matlab.mixin.Copyable
     % LINK Class representing a single rigid link in a serial manipulator.
     %
-    % This class defines a rigid link object characterized by its
-    % Denavit-Hartenberg (DH) parameters, dynamic properties such as mass,
-    % center of mass, and inertia tensor. It also supports copying the object 
-    % to create independent instances.
+    % This class defines a rigid link object characterized by its Denavit-Hartenberg (DH) 
+    % parameters, dynamic properties such as mass, center of mass, and inertia tensor. 
+    % It also supports copying the object to create independent instances.
     %
     % Properties:
-    %   name  - (char or string) Name of the link (default: 'NewLink')
-    %   type  - (char or string) Type of the joint, either 'Revolute' or 'Prismatic' (default: 'Revolute')
-    %   q     - (scalar) Joint variable (default: 0)
-    %   qlim  - (1x2 numeric array) Joint limits [min, max] (default: [-inf, inf])
-    %   m     - (scalar) Mass of the link (default: 0)
-    %   r     - (3x1 numeric vector) Center of mass in the local frame (default: [0; 0; 0])
-    %   I     - (3x3 numeric matrix) Inertia tensor in the local frame (default: zeros(3,3))
+    %   name        - (char or string) Name of the link (default: 'NewLink')
+    %   type        - (char or string) Type of the joint, either 'Revolute' or 'Prismatic' (default: 'Revolute')
+    %   q           - (scalar) Joint variable (default: 0)
+    %   qlim        - (1x2 numeric array) Joint limits [min, max] (default: [-inf, inf])
+    %   m           - (scalar) Mass of the link (default: 0)
+    %   r           - (3x1 numeric vector) Center of mass in the local frame (default: [0; 0; 0])
+    %   I           - (3x3 numeric matrix) Inertia tensor in the local frame (default: zeros(3,3))
     %
     % Dependent Properties (Read-only):
-    %   qsat  - (scalar) Saturated joint variable within the specified limits
-    %   dh    - (1x4 numeric array) Denavit-Hartenberg parameters [theta, d, a, alpha]
-    %   homogtf - (4x4 numeric matrix) Homogeneous transformation matrix
+    %   qsat        - (scalar) Saturated joint variable within the specified limits
+    %   dh          - (1x4 numeric array) Denavit-Hartenberg parameters [theta, d, a, alpha]
+    %   homogtf     - (4x4 numeric matrix) Homogeneous transformation matrix
     %
     % Methods:
-    %   Link  - Constructor method for initializing the Link object.
+    %   Link        - Constructor method for initializing the Link object.
 
     properties
         name        % Name of the link
@@ -121,15 +120,28 @@ classdef Link < matlab.mixin.Copyable
             end
         end
 
-        %https://www.mathworks.com/help/matlab/matlab_oop/avoiding-property-initialization-order-dependency.html
         function set.qlim(obj, value)
-            obj.qlim = value;
+            % SET.QLIM Sets the joint limits and updates the joint variable.
+            %
+            % Input:
+            %   value - (1x2 numeric array) Joint limits [min, max].
+            %
+            % Note:
+            %   Setting joint limits will trigger the update of the joint variable.
 
-            % This will trigger the set.q method
-            obj.q = obj.defaultQ; 
+            obj.qlim = value;
+            obj.q = obj.defaultQ;   % This will trigger the set.q method
         end
 
         function set.q(obj, value)
+            % SET.Q Sets the joint variable within the specified limits.
+            %
+            % Input:
+            %   value - (scalar) Joint variable.
+            %
+            % Note:
+            %   The joint variable is adjusted to be within the limits specified by qlim.
+
             if value >= max(obj.qlim)
                 obj.q = max(obj.qlim);
             elseif value <= min(obj.qlim)
@@ -138,21 +150,6 @@ classdef Link < matlab.mixin.Copyable
                 obj.q = value;
             end
         end
-
-%         function qsat = get.qsat(obj)
-%             % GET.QSAT Returns the saturated joint variable within limits.
-%             %
-%             % Output:
-%             %   qsat - (scalar) Saturated joint variable within the range of qlim.
-% 
-%             if obj.q >= max(obj.qlim)
-%                 qsat = max(obj.qlim);
-%             elseif obj.q <= min(obj.qlim)
-%                 qsat = min(obj.qlim);
-%             else
-%                 qsat = obj.q;
-%             end
-%         end
 
         function dh = get.dh(obj)
             % GET.DH Returns the Denavit-Hartenberg parameters.
