@@ -27,9 +27,9 @@ classdef Link < matlab.mixin.Copyable
         name        % Name of the link
         type        % Type of the joint: 'Revolute' or 'Prismatic'
 
-        q           % Joint variable
         qlim        % Joint limits [min, max]
         offset      % Offset from the input joint variable
+        q           % Joint variable
 
         m           % Mass of the link
         r           % Center of mass (3x1 vector)
@@ -121,20 +121,38 @@ classdef Link < matlab.mixin.Copyable
             end
         end
 
-        function qsat = get.qsat(obj)
-            % GET.QSAT Returns the saturated joint variable within limits.
-            %
-            % Output:
-            %   qsat - (scalar) Saturated joint variable within the range of qlim.
+        %https://www.mathworks.com/help/matlab/matlab_oop/avoiding-property-initialization-order-dependency.html
+        function set.qlim(obj, value)
+            obj.qlim = value;
 
-            if obj.q >= max(obj.qlim)
-                qsat = max(obj.qlim);
-            elseif obj.q <= min(obj.qlim)
-                qsat = min(obj.qlim);
+            % This will trigger the set.q method
+            obj.q = obj.defaultQ; 
+        end
+
+        function set.q(obj, value)
+            if value >= max(obj.qlim)
+                obj.q = max(obj.qlim);
+            elseif value <= min(obj.qlim)
+                obj.q = min(obj.qlim);
             else
-                qsat = obj.q;
+                obj.q = value;
             end
         end
+
+%         function qsat = get.qsat(obj)
+%             % GET.QSAT Returns the saturated joint variable within limits.
+%             %
+%             % Output:
+%             %   qsat - (scalar) Saturated joint variable within the range of qlim.
+% 
+%             if obj.q >= max(obj.qlim)
+%                 qsat = max(obj.qlim);
+%             elseif obj.q <= min(obj.qlim)
+%                 qsat = min(obj.qlim);
+%             else
+%                 qsat = obj.q;
+%             end
+%         end
 
         function dh = get.dh(obj)
             % GET.DH Returns the Denavit-Hartenberg parameters.
@@ -144,9 +162,9 @@ classdef Link < matlab.mixin.Copyable
             %        Depending on the joint type, theta or d is adjusted by the joint variable q.
 
             if isRevolute(obj)
-                dh = [obj.dhconst] .* [0, 1, 1, 1] + [obj.qsat + obj.offset, 0, 0, 0];
+                dh = [obj.dhconst] .* [0, 1, 1, 1] + [obj.q + obj.offset, 0, 0, 0];
             else
-                dh = [obj.dhconst] .* [1, 0, 1, 1] + [0, obj.qsat + obj.offset, 0, 0];
+                dh = [obj.dhconst] .* [1, 0, 1, 1] + [0, obj.q + obj.offset, 0, 0];
             end
         end
 
