@@ -29,6 +29,11 @@ classdef Link < matlab.mixin.Copyable
         offset      % Offset from the input joint variable
         q           % Joint variable
 
+        theta
+        d
+        a
+        alph
+
         m           % Mass of the link
         r           % Center of mass (3x1 vector)
         I           % Inertia tensor (3x3 matrix)
@@ -94,7 +99,6 @@ classdef Link < matlab.mixin.Copyable
             addParameter(parser, 'Name', obj.defaultName, @(x) ischar(x) || isstring(x));
             addParameter(parser, 'Type', obj.defaultType, @(x) ischar(x) || isstring(x));
             addParameter(parser, 'qlim', obj.defaultQLim, @(x) isnumeric(x) && numel(x) == 2);
-            addParameter(parser, 'q', obj.defaultQ, @isscalar);
             addParameter(parser, 'm', obj.defaultM, @isscalar);
             addParameter(parser, 'r', obj.defaultR, @(x) isnumeric(x) && numel(x) == 3);
             addParameter(parser, 'I', obj.defaultI, @(x) isnumeric(x) && all(size(x) == [3 3]));
@@ -106,7 +110,6 @@ classdef Link < matlab.mixin.Copyable
             obj.name = parser.Results.Name;
             obj.type = parser.Results.Type;
             obj.qlim = parser.Results.qlim;
-            obj.q = parser.Results.q;
             obj.m = parser.Results.m;
             obj.r = parser.Results.r;
             obj.I = parser.Results.I;
@@ -116,6 +119,8 @@ classdef Link < matlab.mixin.Copyable
             else
                 obj.offset = obj.dhconst(2);  % Offset is d for prismatic joints
             end
+
+            obj.q = obj.defaultQ;
         end
 
         function set.qlim(obj, value)
