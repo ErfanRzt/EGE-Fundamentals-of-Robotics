@@ -44,10 +44,6 @@ classdef Link < matlab.mixin.Copyable
         homogtf     % Homogeneous transformation matrix
     end
 
-    properties (Dependent = true, Access = protected)
-        dhconst     % Constant DH parameters
-    end
-
     properties (Constant, Access = protected)
         defaultName = 'NewLink';          % Default name for the link
         defaultType = 'Revolute';         % Default joint type
@@ -56,7 +52,6 @@ classdef Link < matlab.mixin.Copyable
         defaultM = 0;                     % Default mass
         defaultR = [0; 0; 0];             % Default center of mass
         defaultI = zeros(3, 3);           % Default inertia tensor
-        defaultDH = [0, 0, 0, 0];         % Default DH parameters
     end
     
     methods
@@ -86,18 +81,6 @@ classdef Link < matlab.mixin.Copyable
             % Output:
             %   obj - Instance of the Link class.
 
-            % Check if DH parameters are provided; otherwise, use default
-            if nargin < 1 || isempty(dhparams)
-                obj.theta = defaultDH(1);
-                obj.d = defaultDH(2);
-                obj.a = defaultDH(3);
-                obj.alpha = defaultDH(4);
-            else
-                obj.theta = dhparams(1);
-                obj.d = dhparams(2);
-                obj.a = dhparams(3);
-                obj.alpha = dhparams(4);
-            end
 
             % Parse optional name-value pair arguments for other properties
             parser = inputParser;
@@ -118,12 +101,6 @@ classdef Link < matlab.mixin.Copyable
             obj.m = parser.Results.m;
             obj.r = parser.Results.r;
             obj.I = parser.Results.I;
-
-            if isRevolute(obj)
-                obj.offset = obj.dhconst(1);  % Offset is theta for revolute joints
-            else
-                obj.offset = obj.dhconst(2);  % Offset is d for prismatic joints
-            end
 
             obj.q = obj.defaultQ;
         end
@@ -160,10 +137,6 @@ classdef Link < matlab.mixin.Copyable
             else
                 obj.q = value;
             end
-        end
-
-        function dhconst = get.dhconst(obj)
-            dhconst = [obj.theta, obj.d, obj.a, obj.alpha];
         end
 
         function dh = get.dh(obj)
