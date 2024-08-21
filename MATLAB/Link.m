@@ -81,7 +81,6 @@ classdef Link < matlab.mixin.Copyable
             % Output:
             %   obj - Instance of the Link class.
 
-
             % Parse optional name-value pair arguments for other properties
             parser = inputParser;
             addParameter(parser, 'Name', obj.defaultName, @(x) ischar(x) || isstring(x));
@@ -102,7 +101,20 @@ classdef Link < matlab.mixin.Copyable
             obj.r = parser.Results.r;
             obj.I = parser.Results.I;
 
-            obj.q = obj.defaultQ;
+            obj.q = 0;
+
+            if isRevolute(obj)
+                obj.offset = dhparams(1);
+                obj.theta = obj.q;
+                obj.d = dhparams(2);
+            else
+                obj.offset = dhparams(2);
+                obj.theta = dhparams(1);
+                obj.d = obj.q;
+            end
+
+            obj.a = dhparams(3);
+            obj.alpha = dhparams(4);
         end
 
         function set.qlim(obj, value)
