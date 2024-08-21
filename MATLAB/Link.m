@@ -15,7 +15,6 @@ classdef Link < matlab.mixin.Copyable
     %   I           - (3x3 numeric matrix) Inertia tensor in the local frame (default: zeros(3,3))
     %
     % Dependent Properties (Read-only):
-    %   qsat        - (scalar) Saturated joint variable within the specified limits
     %   dh          - (1x4 numeric array) Denavit-Hartenberg parameters [theta, d, a, alpha]
     %   homogtf     - (4x4 numeric matrix) Homogeneous transformation matrix
     %
@@ -36,7 +35,6 @@ classdef Link < matlab.mixin.Copyable
     end
 
     properties (Dependent = true, SetAccess = protected)
-        qsat        % Saturated joint variable
         dh          % Denavit-Hartenberg parameters
         homogtf     % Homogeneous transformation matrix
     end
