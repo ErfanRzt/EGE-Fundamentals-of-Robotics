@@ -123,10 +123,26 @@ classdef SerialLinkManipulator < handle
     
     methods
         function x = fkin(obj, q)
+            % FKIN Computes the forward kinematics for the manipulator.
+            %
+            % Input:
+            %   q - [nJoints x 1 numeric array] Joint variables for each joint in the manipulator.
+            %
+            % Output:
+            %   x - [nJoints x 1 numeric array] Position of the end-effector 
+            %       in the base frame.
+            %
+            % Note:
+            %   The joint variables provided in q are assigned to the corresponding link
+            %   of the manipulator, and the forward kinematics is calculated based on these values.
+
+            % Assign the joint variables to each corresponding link
             for i = 1:obj.nJoints
                 obj.links(i).q = q(i);
             end
-            x = obj.x;
+            
+            % Calculate and return the end-effector position
+            x = obj.x;  % Position of the end-effector
         end
 
         function nLinks = get.nLinks(obj)
