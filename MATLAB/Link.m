@@ -144,11 +144,14 @@ classdef Link < matlab.mixin.Copyable
             %
             % Note:
             %   The joint variable is adjusted to be within the limits specified by qlim.
+            
+            upper_lim = max(obj.qlim);
+            lower_lim = min(obj.qlim);
 
-            if value >= max(obj.qlim)
-                obj.q = max(obj.qlim);
-            elseif value <= min(obj.qlim)
-                obj.q = min(obj.qlim);
+            if value >= upper_lim
+                obj.q = upper_lim;
+            elseif value <= lower_lim
+                obj.q = lower_lim;
             else
                 obj.q = value;
             end
