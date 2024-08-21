@@ -55,6 +55,7 @@ classdef Link < matlab.mixin.Copyable
     end
 
     properties (Access = protected)
+        dhmask
         theta_
         d_
     end
@@ -193,10 +194,12 @@ classdef Link < matlab.mixin.Copyable
             %   dh - (1x4 numeric array) DH parameters [theta, d, a, alpha].
             %        Depending on the joint type, theta or d is adjusted by the joint variable q.
 
+            dhconst = [obj.theta, obj.d, obj.a, obj.alpha];
+
             if isRevolute(obj)
-                dh = [obj.dhconst] .* [0, 1, 1, 1] + [obj.q + obj.offset, 0, 0, 0];
+                dh = dhconst + [1, 0, 0, 0] .* obj.offset;
             else
-                dh = [obj.dhconst] .* [1, 0, 1, 1] + [0, obj.q + obj.offset, 0, 0];
+                dh = dhconst + [0, 1, 0, 0] .* obj.offset;
             end
         end
 
