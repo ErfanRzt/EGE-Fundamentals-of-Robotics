@@ -53,6 +53,11 @@ classdef Link < matlab.mixin.Copyable
         defaultR = [0; 0; 0];             % Default center of mass
         defaultI = zeros(3, 3);           % Default inertia tensor
     end
+
+    properties (Access = protected)
+        theta_
+        d_
+    end
     
     methods
         function obj = Link(dhparams, varargin)
@@ -101,7 +106,7 @@ classdef Link < matlab.mixin.Copyable
             obj.r = parser.Results.r;
             obj.I = parser.Results.I;
 
-            obj.q = 0;
+            obj.q = obj.defaultQ;
 
             if isRevolute(obj)
                 obj.offset = dhparams(1);
@@ -146,6 +151,26 @@ classdef Link < matlab.mixin.Copyable
                 obj.q = upper_lim;
             elseif value <= lower_lim
                 obj.q = lower_lim;
+            else
+                obj.q = value;
+            end
+
+            if isRevolute(obj)
+                obj.theta_ = obj.q;
+            else
+                obj.d_ = obj.q;
+            end
+        end
+
+        function theta = get.theta(obj)
+            if isRevolute(obj)
+                theta = obj.theta_;
+            end
+        end
+
+        function set.theta(obj, value)
+            if ~isRevolute(obj)
+                obj.theta_ = value;
             else
                 obj.q = value;
             end
