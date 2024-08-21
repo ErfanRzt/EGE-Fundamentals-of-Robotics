@@ -11,9 +11,9 @@ classdef SerialLinkManipulator < handle
     %                   ---
     %   name            [string]        Name of the manipulator.
     %   description     [string]        Description or comments about the manipulator.
-    %   links           [1xN Link]      Array of Link objects representing the links of the manipulator.
+    %   links           [Link array]    Array of Link objects and length N, epresenting the links of the manipulator.
     %   base            [4x4 matrix]    Homogeneous transformation from world to base frame (default: eye(4)).
-    %   gravity         [3x1 vector]    Vector representing gravitational effects (default: [0, 0, 9.81]).
+    %   gravity         [3x1 vector]    Vector representing gravitational effects (default: [0, 0, -9.81]).
     %
     %
     % Properties:       (DEPENDENT, SETACCESS PROTECTED)
@@ -27,8 +27,8 @@ classdef SerialLinkManipulator < handle
     %   dh              [Nx4 matrix]    Standard DH table.
     %   tool            [4x4 matrix]    Homogeneous transformation from base to end-effector.
     %   jointPose       [3xN matrix]    Position of each joint.
-    %   homogtf         [Nx1 cell]      Consecutive homogeneous transforms between coordinate frames.
-    %   homogtf2base    [Nx1 cell]      Homogeneous transforms from each coordinate frame to the base.
+    %   homogtf         [cell array]    Consecutive homogeneous transforms between coordinate frames of length N.
+    %   homogtf2base    [cell array]    Homogeneous transforms from each coordinate frame to the base of length N.
     %
     %
     % Examples:
@@ -86,7 +86,7 @@ classdef SerialLinkManipulator < handle
     properties (Access = private)
         defaultName = 'NewRobot';                       % Default name (string)
         defaultDescription = 'Serial Rigid Link Robot'; % Default description (string)
-        defaultGravity = [0; 0; 9.81];                  % Default gravity vector (3x1 vector)
+        defaultGravity = [0; 0; -9.81];                 % Default gravity vector (3x1 vector)
         defaultBase = eye(4);                           % Default base transformation (4x4 matrix)
     end
 
