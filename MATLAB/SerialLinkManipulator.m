@@ -9,8 +9,8 @@ classdef SerialLinkManipulator < handle
     %                   can be accessed and modified from outside the class
     %                   by any code that uses the class. READ/WRITE!
     %                   ---
-    %   name            [string]        Name of the manipulator.
-    %   description     [string]        Description or comments about the manipulator.
+    %   name            [char/string]   Name of the manipulator.
+    %   description     [char/string]   Description or comments about the manipulator.
     %   links           [Link array]    Array of Link objects and length N, epresenting the links of the manipulator.
     %   base            [4x4 matrix]    Homogeneous transformation from world to base frame (default: eye(4)).
     %   gravity         [3x1 vector]    Vector representing gravitational effects (default: [0, 0, -9.81]).
@@ -33,7 +33,7 @@ classdef SerialLinkManipulator < handle
     %
     % Examples:
     %   o   Create a 2-link RR planar robot
-    %       link1 = Link([ 0     0   a1  pi/2], 'name', 'LINK 1');
+    %       link1 = Link([ 0     0   a1     0], 'name', 'LINK 1');
     %       link2 = Link([ 0     0   a2     0], 'name', 'LINK 2');
     %       robot = SerialLink([link1,  link2], 'name', 'RR Planar Robot');
     %
@@ -122,6 +122,13 @@ classdef SerialLinkManipulator < handle
     end
     
     methods
+        function x = fkin(obj, q)
+            for i = 1:obj.nJoints
+                obj.links(i).q = q(i);
+            end
+            x = obj.x;
+        end
+
         function nLinks = get.nLinks(obj)
             % GET.NLINKS Returns the number of links in the manipulator.
             %
