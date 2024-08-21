@@ -5,21 +5,32 @@ classdef Link < matlab.mixin.Copyable
     % parameters, dynamic properties such as mass, center of mass, and inertia tensor. 
     % It also supports copying the object to create independent instances.
     %
-    % Properties:
-    %   name        - (char or string) Name of the link (default: 'NewLink')
-    %   type        - (char or string) Type of the joint, either 'Revolute' or 'Prismatic' (default: 'Revolute')
-    %   q           - (scalar) Joint variable (default: 0)
-    %   qlim        - (1x2 numeric array) Joint limits [min, max] (default: [-inf, inf])
-    %   m           - (scalar) Mass of the link (default: 0)
-    %   r           - (3x1 numeric vector) Center of mass in the local frame (default: [0; 0; 0])
-    %   I           - (3x3 numeric matrix) Inertia tensor in the local frame (default: zeros(3,3))
+    % Properties:       (PUBLIC)
+    %                   can be accessed and modified from outside the class
+    %                   by any code that uses the class. READ/WRITE!
+    %                   ---
+    %   name            [char or string]      Name of the link (default: 'NewLink')
+    %   type            [char or string]      Joint type: 'Revolute' or 'Prismatic' (default: 'Revolute')
+    %   qlim            [1x2 numeric array]   Joint limits [min, max] (default: [-inf, inf])
+    %   offset          [scalar]              Joint variable offset (default: 0)
+    %   q               [scalar]              Joint variable (default: 0)
+    %   theta           [scalar]              Joint angle (for revolute links)
+    %   d               [scalar]              Joint distance (for prismatic links)
+    %   a               [scalar]              Link length
+    %   alpha           [scalar]              Link twist angle
+    %   m               [scalar]              Mass of the  link (default: 0)
+    %   r               [3x1 numeric vector]  Center of mass in local frame (default: [0; 0; 0])
+    %   I               [3x3 numeric matrix]  Inertia tensor in local frame (default: zeros(3,3))
     %
-    % Dependent Properties (Read-only):
-    %   dh          - (1x4 numeric array) Denavit-Hartenberg parameters [theta, d, a, alpha]
-    %   homogtf     - (4x4 numeric matrix) Homogeneous transformation matrix
+    % Properties:       (DEPENDENT, SETACCESS PROTECTED)
+    %                   is calculated dynamically when accessed, and it 
+    %                   does not store its value internally. READ-ONLY!
+    %                   ---
+    %   dh              [1x4 numeric array]   Denavit-Hartenberg parameters [theta, d, a, alpha]
+    %   homogtf         [4x4 numeric matrix]  Homogeneous transformation matrix
     %
     % Methods:
-    %   Link        - Constructor method for initializing the Link object.
+    %   Link          - Constructor for initializing the Link object.
 
     properties
         name        % Name of the link
@@ -29,10 +40,10 @@ classdef Link < matlab.mixin.Copyable
         offset      % Offset from the input joint variable
         q           % Joint variable
 
-        theta
-        d
-        a
-        alpha
+        theta       % Joint angle (for revolute links)
+        d           % Joint distance (for prismatic links)
+        a           % Link length
+        alpha       % Link twist angle
 
         m           % Mass of the link
         r           % Center of mass (3x1 vector)
@@ -51,13 +62,12 @@ classdef Link < matlab.mixin.Copyable
         defaultQ = 0;                     % Default joint variable
         defaultM = 0;                     % Default mass
         defaultR = [0; 0; 0];             % Default center of mass
-        defaultI = zeros(3, 3);           % Default inertia tensor
+        defaultI = eye(3);                % Default inertia tensor
     end
 
     properties (Access = protected)
-        dhmask
-        theta_
-        d_
+        theta_     % Internal representation of theta
+        d_         % Internal representation of d
     end
     
     methods
@@ -156,6 +166,7 @@ classdef Link < matlab.mixin.Copyable
                 obj.q = value;
             end
 
+            % Update internal representation based on joint type
             if isRevolute(obj)
                 obj.theta_ = obj.q;
             else
@@ -164,10 +175,24 @@ classdef Link < matlab.mixin.Copyable
         end
 
         function theta = get.theta(obj)
+            % GET.THETA Retrieves the internal representation of the joint angle.
+            %
+            % Output:
+            %   theta - [scalar] Current value of the joint angle (theta).
+
             theta = obj.theta_;
         end
 
         function set.theta(obj, value)
+            % SET.THETA Sets the joint angle for revolute links.
+            %
+            % Input:
+            %   value - [scalar] Desired joint angle (theta).
+            %
+            % Note:
+            %   The joint angle can only be set for non-revolute links, 
+            %   otherwise the joint variable q will be updated.
+
             if ~isRevolute(obj)
                 obj.theta_ = value;
             else
@@ -176,10 +201,24 @@ classdef Link < matlab.mixin.Copyable
         end
 
         function d = get.d(obj)
+            % GET.D Retrieves the internal representation of the joint distance.
+            %
+            % Output:
+            %   d - [scalar] Current value of the joint distance (d).
+
             d = obj.d_;
         end
 
         function set.d(obj, value)
+            % SET.D Sets the joint distance for prismatic links.
+            %
+            % Input:
+            %   value - [scalar] Desired joint distance (d).
+            %
+            % Note:
+            %   The joint distance can only be set for non-prismatic links, 
+            %   otherwise the joint variable q will be updated.
+
             if ~isPrismatic(obj)
                 obj.d_ = value;
             else
