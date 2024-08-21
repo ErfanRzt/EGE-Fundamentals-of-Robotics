@@ -163,14 +163,24 @@ classdef Link < matlab.mixin.Copyable
         end
 
         function theta = get.theta(obj)
-            if isRevolute(obj)
-                theta = obj.theta_;
-            end
+            theta = obj.theta_;
         end
 
         function set.theta(obj, value)
             if ~isRevolute(obj)
                 obj.theta_ = value;
+            else
+                obj.q = value;
+            end
+        end
+
+        function d = get.d(obj)
+            d = obj.d_;
+        end
+
+        function set.d(obj, value)
+            if ~isPrismatic(obj)
+                obj.d_ = value;
             else
                 obj.q = value;
             end
