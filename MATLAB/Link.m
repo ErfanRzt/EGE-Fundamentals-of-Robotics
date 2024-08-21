@@ -32,7 +32,7 @@ classdef Link < matlab.mixin.Copyable
         theta
         d
         a
-        alph
+        alpha
 
         m           % Mass of the link
         r           % Center of mass (3x1 vector)
@@ -44,7 +44,7 @@ classdef Link < matlab.mixin.Copyable
         homogtf     % Homogeneous transformation matrix
     end
 
-    properties (Access = protected)
+    properties (Dependent = true, Access = protected)
         dhconst     % Constant DH parameters
     end
 
@@ -79,7 +79,6 @@ classdef Link < matlab.mixin.Copyable
             %     'Name'    - (char or string, optional) Name of the link (default: 'NewLink').
             %     'Type'    - (char or string, optional) Type of joint: 'Revolute' or 'Prismatic' (default: 'Revolute').
             %     'qlim'    - (1x2 numeric array, optional) Joint limits [min, max] (default: [-inf, inf]).
-            %     'q'       - (scalar, optional) Joint variable (default: 0).
             %     'm'       - (scalar, optional) Mass of the link (default: 0).
             %     'r'       - (3x1 numeric vector, optional) Center of mass (default: [0; 0; 0]).
             %     'I'       - (3x3 numeric matrix, optional) Inertia tensor (default: zeros(3,3)).
@@ -89,9 +88,15 @@ classdef Link < matlab.mixin.Copyable
 
             % Check if DH parameters are provided; otherwise, use default
             if nargin < 1 || isempty(dhparams)
-                obj.dhconst = obj.defaultDH;
+                obj.theta = defaultDH(1);
+                obj.d = defaultDH(2);
+                obj.a = defaultDH(3);
+                obj.alpha = defaultDH(4);
             else
-                obj.dhconst = dhparams;
+                obj.theta = dhparams(1);
+                obj.d = dhparams(2);
+                obj.a = dhparams(3);
+                obj.alpha = dhparams(4);
             end
 
             % Parse optional name-value pair arguments for other properties
@@ -144,7 +149,7 @@ classdef Link < matlab.mixin.Copyable
             %
             % Note:
             %   The joint variable is adjusted to be within the limits specified by qlim.
-            
+
             upper_lim = max(obj.qlim);
             lower_lim = min(obj.qlim);
 
@@ -155,6 +160,10 @@ classdef Link < matlab.mixin.Copyable
             else
                 obj.q = value;
             end
+        end
+
+        function dhconst = get.dhconst(obj)
+            dhconst = [obj.theta, obj.d, obj.a, obj.alpha];
         end
 
         function dh = get.dh(obj)
