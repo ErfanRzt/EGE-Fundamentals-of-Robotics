@@ -250,9 +250,7 @@ classdef Link < matlab.mixin.Copyable
 
             homogtf = cell2mat(dhTransforms(obj.dh));
         end
-    end
 
-    methods (Access = private)
         function isrev = isRevolute(obj)
             % ISREVOLUTE Checks if the link is a revolute joint.
             %
