@@ -76,6 +76,7 @@ classdef SerialLinkManipulator < handle
         nJoints       % Number of joints in the manipulator (scalar)
         q             % Joint space vector variables (Nx1 vector)
         x             % Task space vector variables (3x1 vector)
+        J             % Jacobian Matrix
         dh            % Standard DH table (Nx4 matrix)
         tool          % Homogeneous transformation from base to end-effector (4x4 matrix)
         jointPose     % Position of each joint (3xN matrix)
@@ -143,6 +144,21 @@ classdef SerialLinkManipulator < handle
             
             % Calculate and return the end-effector position
             obj.x;
+        end
+
+        function J = get.J(obj)
+            J = zeros([6, obj.nJoints]);
+            for i = 1:obj.nJoints
+                if obj.links(i).isRevolute()
+                    Jvi = cross(obj.links(i).homogtf(1:3, 3), (obj.x - obj.jointPose(:, i)) );
+                    Jwi = obj.links(i).homogtf(1:3, 3);
+                else
+                    Jvi = obj.links(i).homogtf(1:3, 3);
+                    Jwi = [0; 0; 0];
+                end
+
+                J(:, i) = [Jvi; Jwi];
+            end
         end
 
         function nLinks = get.nLinks(obj)
