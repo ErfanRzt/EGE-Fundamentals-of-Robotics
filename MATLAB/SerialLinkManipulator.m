@@ -247,7 +247,7 @@ classdef SerialLinkManipulator < handle
             end
         end
         
-        function toolTransform = get.tool(obj)
+        function tool = get.tool(obj)
             % GET.TOOL Retrieves the homogeneous transformation from base to end-effector.
             %
             % Inputs:
@@ -256,7 +256,7 @@ classdef SerialLinkManipulator < handle
             % Outputs:
             %   toolTransform - Homogeneous transformation matrix from base to end-effector (4x4 matrix).
 
-            toolTransform = cell2mat(obj.homogtf2base(obj.nLinks));
+            tool = cell2mat(obj.homogtf2base(obj.nLinks));
         end
         
         function homogtf = get.homogtf(obj)
