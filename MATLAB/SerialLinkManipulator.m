@@ -77,6 +77,8 @@ classdef SerialLinkManipulator < handle
         q             % Joint space vector variables (Nx1 vector)
         x             % Task space vector variables (3x1 vector)
         J             % Jacobian Matrix
+        Jv
+        Jw
         dh            % Standard DH table (Nx4 matrix)
         tool          % Homogeneous transformation from base to end-effector (4x4 matrix)
         jointPose     % Position of each joint (3xN matrix)
@@ -159,6 +161,14 @@ classdef SerialLinkManipulator < handle
 
                 J(:, i) = [Jvi; Jwi];
             end
+        end
+
+        function Jv = get.Jv(obj)
+            Jv = obj.J(1:3, :);
+        end
+
+        function Jw = get.Jw(obj)
+            Jw = obj.J(4:6, :);
         end
 
         function nLinks = get.nLinks(obj)
