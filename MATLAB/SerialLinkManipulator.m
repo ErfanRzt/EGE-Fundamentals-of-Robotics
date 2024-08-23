@@ -74,6 +74,7 @@ classdef SerialLinkManipulator < handle
     properties (Dependent = true, SetAccess = protected)
         nLinks        % Number of links in the manipulator (scalar)
         nJoints       % Number of joints in the manipulator (scalar)
+        config
         q             % Joint space vector variables (Nx1 vector)
         x             % Task space vector variables (3x1 vector)
         J             % Jacobian Matrix
@@ -193,6 +194,10 @@ classdef SerialLinkManipulator < handle
             %   nJoints - Number of joints in the manipulator (scalar).
 
             nJoints = obj.nLinks;   % Assumes one joint per link
+        end
+
+        function config = get.config(obj)
+            config = [obj.links.type];
         end
 
         function dh = get.dh(obj)
