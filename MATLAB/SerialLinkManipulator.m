@@ -122,7 +122,7 @@ classdef SerialLinkManipulator < handle
     end
     
     methods
-        function x = fkin(obj, q)
+        function fkin(obj, q)
             % FKIN Computes the forward kinematics for the manipulator.
             %
             % Input:
@@ -142,7 +142,7 @@ classdef SerialLinkManipulator < handle
             end
             
             % Calculate and return the end-effector position
-            x = obj.x;  % Position of the end-effector
+            obj.x;
         end
 
         function nLinks = get.nLinks(obj)
