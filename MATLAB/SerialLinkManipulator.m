@@ -74,18 +74,19 @@ classdef SerialLinkManipulator < handle
     properties (Dependent = true, SetAccess = protected)
         nLinks        % Number of links in the manipulator (scalar)
         nJoints       % Number of joints in the manipulator (scalar)
-        config
+        config        % Configuration of the manipulator (character vector)
         q             % Joint space vector variables (Nx1 vector)
         x             % Task space vector variables (3x1 vector)
-        J             % Jacobian Matrix
-        Jv
-        Jw
+        J             % Jacobian Matrix (6xN matrix)
+        Jv            % Linear velocity Jacobian (3xN matrix)
+        Jw            % Angular velocity Jacobian (3xN matrix)
         dh            % Standard DH table (Nx4 matrix)
         tool          % Homogeneous transformation from base to end-effector (4x4 matrix)
         jointPose     % Position of each joint (3xN matrix)
         homogtf       % Consecutive homogeneous transforms between coordinates (Nx1 cell array)
         homogtf2base  % Homogeneous transforms from each coordinate frame to base (Nx1 cell array)
     end
+
 
     properties (Access = private)
         defaultName = 'NewRobot';                       % Default name (string)
@@ -150,25 +151,54 @@ classdef SerialLinkManipulator < handle
         end
 
         function J = get.J(obj)
+            % GET.J Computes the full Jacobian matrix for the manipulator.
+            %
+            % Inputs:
+            %   obj - An instance of the SerialLinkManipulator class.
+            %
+            % Outputs:
+            %   J - The Jacobian matrix (6xN matrix) representing the relationship 
+            %       between joint velocities and the end-effector's linear and 
+            %       angular velocities.
+        
+            % Initialize the Jacobian matrix with zeros
             J = zeros([6, obj.nJoints]);
+            
             for i = 1:obj.nJoints
                 if obj.links(i).isRevolute()
-                    Jvi = cross(obj.links(i).homogtf(1:3, 3), (obj.x - obj.jointPose(:, i)) );
+                    Jvi = cross(obj.links(i).homogtf(1:3, 3), (obj.x - obj.jointPose(:, i)));
                     Jwi = obj.links(i).homogtf(1:3, 3);
                 else
                     Jvi = obj.links(i).homogtf(1:3, 3);
                     Jwi = [0; 0; 0];
                 end
-
+                
+                % Combine the linear and angular components
                 J(:, i) = [Jvi; Jwi];
             end
         end
-
+        
         function Jv = get.Jv(obj)
+            % GET.JV Extracts the linear velocity Jacobian from the full Jacobian matrix.
+            %
+            % Inputs:
+            %   obj - An instance of the SerialLinkManipulator class.
+            %
+            % Outputs:
+            %   Jv - The linear velocity Jacobian (3xN matrix).
+
             Jv = obj.J(1:3, :);
         end
-
+        
         function Jw = get.Jw(obj)
+            % GET.JW Extracts the angular velocity Jacobian from the full Jacobian matrix.
+            %
+            % Inputs:
+            %   obj - An instance of the SerialLinkManipulator class.
+            %
+            % Outputs:
+            %   Jw - The angular velocity Jacobian (3xN matrix).
+
             Jw = obj.J(4:6, :);
         end
 
@@ -197,6 +227,16 @@ classdef SerialLinkManipulator < handle
         end
 
         function config = get.config(obj)
+            % GET.CONFIG Retrieves the configuration of the manipulator.
+            %
+            % Inputs:
+            %   obj - An instance of the SerialLinkManipulator class.
+            %
+            % Outputs:
+            %   config - A vector containing the type of each joint in the manipulator.
+            %            The types are represented as characters ('R' for revolute, 
+            %            'P' for prismatic).
+        
             config = [obj.links.type];
         end
 

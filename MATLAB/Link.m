@@ -252,11 +252,23 @@ classdef Link < matlab.mixin.Copyable
         end
 
         function set.type(obj, value)
+            % SET.TYPE Sets the type of the joint and ensures it is correctly identified.
+            %
+            % Inputs:
+            %   obj   - An instance of the Link class.
+            %   value - A char/string representing the joint type.
+            %
+            % Outputs:
+            %   None (the function modifies the obj.type property).
+        
+            % Set the type property to the provided value
             obj.type = value;
+            
+            % Ensure the type is correctly identified and modified
             if isRevolute(obj)
-                obj.type = 'R';
+                obj.type = 'R';     % set the type to 'R'
             else
-                obj.type = 'P';
+                obj.type = 'P';     % set the type to 'P'
             end
         end
 
