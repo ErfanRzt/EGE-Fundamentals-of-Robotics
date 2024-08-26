@@ -1,6 +1,6 @@
 classdef PrismaticLink < Link
     methods
-        function P = PrismaticLink(theta, a, alpha, offset, varargin)
+        function obj = PrismaticLink(theta, a, alpha, offset, varargin)
             % PRISMATICLINK Construct an instance of this class.
             %
             % Syntax:
@@ -28,8 +28,8 @@ classdef PrismaticLink < Link
             % Output:
             %   obj     - Instance of the PrismaticLink class.
             
-            % Call the parent class constructor with specified parameters.
-            P = P@Link([theta, offset, a, alpha], 'type', 'Prismatic', varargin{:});
+            dhparameters = [theta, offset, a, alpha];
+            obj = obj@Link(dhparameters, 'type', 'Prismatic', varargin{:});
         end
     end
 end

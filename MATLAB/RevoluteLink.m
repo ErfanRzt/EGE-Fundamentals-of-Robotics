@@ -1,6 +1,6 @@
 classdef RevoluteLink < Link
     methods
-        function R = RevoluteLink(d, a, alpha, offset, varargin)
+        function obj = RevoluteLink(d, a, alpha, offset, varargin)
             % REVOLUTELINK Construct an instance of this class.
             %
             % Syntax:
@@ -28,8 +28,8 @@ classdef RevoluteLink < Link
             % Output:
             %   obj     - Instance of the RevoluteLink class.
             
-            % Call the parent class constructor with specified parameters.
-            R = R@Link([offset, d, a, alpha], 'type', 'Revolute', varargin{:});
+            dhparameters = [offset, d, a, alpha];
+            obj = obj@Link(dhparameters, 'type', 'Revolute', varargin{:});
         end
     end
 end
