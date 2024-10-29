@@ -1,7 +1,5 @@
 **IAESTE SUMMER INTERNSHIP PROGRAM**  
 
----
-
 **Fundamentals of Robotics**  
 Introduction to Robotics Modeling and Control 
 
